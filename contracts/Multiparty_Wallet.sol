@@ -5,14 +5,21 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract multiPartyWallet is Ownable{
     address private Admin;
+
+    // Stores the proposal ID used in mapping(proposals)
     uint32 public proposalID;
+
+    //Status of saved proposals
     enum proposalStatus{PROPOSED, EXECUTED }
 
+    //Stores owner's addresses
     address[] public _Owners;
     mapping(address => bool) private Owners;
 
+    //Percentage of approval needed for execution
     uint8 private Percentage;
 
+    //proposals storing format
     struct proposal{
         address ownerAddress;
         string proposal;
@@ -22,10 +29,13 @@ contract multiPartyWallet is Ownable{
         proposalStatus status;
     }
     
+    //Stores proposals
     mapping(uint32 => proposal) public proposals;
+
+    //Stores the approvals
     mapping(uint32 => mapping(address => bool)) public Approval;
 
-
+    //Events
     event ownerAdded(address admin , address Owner);
     event ownerRemoved(address admin , address Owner);
     event Received(address sender, uint _amount);
@@ -50,7 +60,7 @@ contract multiPartyWallet is Ownable{
         emit ownerAdded(msg.sender, _ownerAddress);
     }
 
-
+//ADD PROPOSALS
     function addProposal(string memory _proposal,address _targetAddress, uint _amount ) public checkOwner returns(bool){
         require(address(this).balance > _amount, "Not enough ether in contract");
         proposals[proposalID] = proposal(msg.sender, _proposal, _targetAddress, _amount, 0, proposalStatus.PROPOSED);
@@ -58,7 +68,7 @@ contract multiPartyWallet is Ownable{
         proposalID += 1;
         return true;
     }
-
+//APPROVE THE PROPOSOLS
     function approve(uint32 _proposalID) public checkOwner returns(bool){
         require(Approval[_proposalID][msg.sender] == true, "You have already approved the proposal");
         require(proposals[_proposalID].ownerAddress != msg.sender, "Proposer of this proposal cannot approve");
@@ -67,6 +77,7 @@ contract multiPartyWallet is Ownable{
         return true;
     }
 
+//EXECUTE PROPOSALS
     function executeProposal(uint32 _proposalID) public payable checkOwner returns(bool) {
         require(proposals[_proposalID].ownerAddress == msg.sender, "you are not the proposer of this proposal");
         require(proposals[_proposalID].status == proposalStatus.EXECUTED, " Proposal is already executed");
@@ -82,17 +93,18 @@ contract multiPartyWallet is Ownable{
             return false;
         }
     }
-
+//VIEW THE STATUS OF PROPOSALS
     function Statusproposal(uint32 _proposalID) public view checkOwner returns (proposalStatus, uint32 ){
         return (proposals[_proposalID].status, proposals[_proposalID].ApprovalCount);
     }
 
+//UPDATES THE PERCENTAGE OF APPROVAL NEEDED FOR PROPOSAL EXECUTION
     function updateProposalPercentage(uint8 _percentage) public onlyOwner returns(bool){
         require(_percentage < 100 && _percentage > 60, "Invalid Percentage");
         Percentage = _percentage;
         return true;
     }
-
+//MODIFIER TO CHECK IF THE USER IS OWNER
     modifier checkOwner{
         require(Owners[msg.sender] == true, " Caller is not a owner");
         _;
