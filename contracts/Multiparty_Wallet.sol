@@ -72,7 +72,7 @@ contract multiPartyWallet is Ownable{
     }
 //APPROVE THE PROPOSOLS
     function approve(uint32 _proposalID) public checkOwner returns(bool){
-        require(Approval[_proposalID][msg.sender] == true, "You have already approved the proposal");
+        require(Approval[_proposalID][msg.sender] != true, "You have already approved the proposal");
         require(proposals[_proposalID].ownerAddress != msg.sender, "Proposer of this proposal cannot approve");
         Approval[_proposalID][msg.sender] == true;
         proposals[_proposalID].ApprovalCount += 1; 
