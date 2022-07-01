@@ -14,7 +14,7 @@ contract multiPartyWallet is Ownable{
 
     //Stores owner's addresses
     address[] public _Owners;
-    mapping(address => bool) private Owners;
+    mapping(address => bool) public Owners;
 
     //Percentage of approval needed for execution
     uint8 private Percentage;
@@ -49,15 +49,17 @@ contract multiPartyWallet is Ownable{
     }
 //ADD OWNER
     function addOwner(address _ownerAddress) public onlyOwner{
+        require(Owners[msg.sender] != true, "Owner already exist");
         Owners[_ownerAddress] = true;
         _Owners.push(_ownerAddress);
         emit ownerAdded(msg.sender, _ownerAddress);
     }
 //REMOVE OWNER
     function removeOwner(address _ownerAddress) public onlyOwner{
+        require(Owners[_ownerAddress] == true, "Owner does not exist");
         Owners[_ownerAddress] = false;
         _Owners.pop();
-        emit ownerAdded(msg.sender, _ownerAddress);
+        emit ownerRemoved(msg.sender, _ownerAddress);
     }
 
 //ADD PROPOSALS
@@ -83,7 +85,7 @@ contract multiPartyWallet is Ownable{
         require(proposals[_proposalID].status == proposalStatus.EXECUTED, " Proposal is already executed");
         uint _amount = proposals[_proposalID].Amount;
         address _targetAddress = proposals[_proposalID].targetAddress;
-        uint _percentage = ((proposals[_proposalID].ApprovalCount/_Owners.length)*100);
+        uint _percentage = (proposals[_proposalID].ApprovalCount*100/_Owners.length);
         if(_percentage > Percentage && address(this).balance > (_amount)){
             payable(address(_targetAddress)).transfer(_amount);
             emit proposalExecuted(msg.sender, _targetAddress, _amount);
@@ -104,6 +106,12 @@ contract multiPartyWallet is Ownable{
         Percentage = _percentage;
         return true;
     }
+
+     //OWNERS COUNT 
+    function getOwner() public view returns(address[] memory){
+        return _Owners;
+    }
+    
 //MODIFIER TO CHECK IF THE USER IS OWNER
     modifier checkOwner{
         require(Owners[msg.sender] == true, " Caller is not a owner");
