@@ -82,7 +82,7 @@ contract multiPartyWallet is Ownable{
 //EXECUTE PROPOSALS
     function executeProposal(uint32 _proposalID) public payable checkOwner returns(bool) {
         require(proposals[_proposalID].ownerAddress == msg.sender, "you are not the proposer of this proposal");
-        require(proposals[_proposalID].status == proposalStatus.EXECUTED, " Proposal is already executed");
+        require(proposals[_proposalID].status != proposalStatus.EXECUTED, " Proposal is already executed");
         uint _amount = proposals[_proposalID].Amount;
         address _targetAddress = proposals[_proposalID].targetAddress;
         uint _percentage = (proposals[_proposalID].ApprovalCount*100/_Owners.length);
